@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Color } from '../types';
+import { Color, Translations } from '../types';
 
 interface ColorCardProps {
   color: Color;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  t: Translations;
 }
 
-export const ColorCard: React.FC<ColorCardProps> = ({ color, size = 'md', className = '' }) => {
+export const ColorCard: React.FC<ColorCardProps> = ({ color, size = 'md', className = '', t }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -31,7 +32,7 @@ export const ColorCard: React.FC<ColorCardProps> = ({ color, size = 'md', classN
         
         {/* Copy Feedback Overlay */}
         <div className={`absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-200 ${copied ? 'opacity-100' : 'opacity-0'}`}>
-          <span className="text-white text-xs font-medium tracking-widest">COPIED</span>
+          <span className="text-white text-xs font-medium tracking-widest">{t.copied}</span>
         </div>
       </div>
       

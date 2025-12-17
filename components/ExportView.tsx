@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Palette, Translations } from '../types';
 import html2canvas from 'html2canvas';
 
+
 interface ExportViewProps {
   palette: Palette;
   imageUrl: string;
@@ -10,11 +11,12 @@ interface ExportViewProps {
   langDir: 'ltr' | 'rtl';
 }
 
-type ExportMode = 'wallpaper' | 'card';
+type ExportMode = 'compare' | 'wallpaper' | 'card';
 
 export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, onClose, langDir }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<ExportMode>('wallpaper');
+  const [mode, setMode] = useState<ExportMode>('compare');
+  const wallpaperRef = useRef<HTMLDivElement>(null);
   const quote = useRef(t.quotes[Math.floor(Math.random() * t.quotes.length)]).current;
   const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
 
@@ -40,9 +42,10 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
   }, [palette]);
 
   const handleDownload = async () => {
-    if (!cardRef.current) return;
+    const targetRef = mode === 'wallpaper' ? wallpaperRef : cardRef;
+    if (!targetRef.current) return;
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      const canvas = await html2canvas(targetRef.current, {
         scale: 3, // Super high res for wallpapers
         backgroundColor: null,
         useCORS: true,
@@ -75,22 +78,72 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
         {/* Editor / Preview Area */}
         <div className="flex-1 flex items-center justify-center w-full h-full max-h-[85vh]">
             
-            {/* WALLPAPER VIEW */}
-            {mode === 'wallpaper' && (
+            {/* COMPARE VIEW */}
+            {mode === 'compare' && (
               <div 
                 ref={cardRef}
+                className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full "
+              >
+                {/* Image Comparison Section - Side by Side */}
+                <div className="flex-1 flex gap-6 p-8 max-w-lg">
+                  {/* Original Image */}
+                  <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
+                    <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                      {t.original}
+                    </div>
+                    <img 
+                      src={imageUrl} 
+                      alt="Original Photo" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Wallpaper (Artistic Output) */}
+                  <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]" style={{ backgroundImage: gradientData.css }}>
+                    <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                      {t.artisticWallpaper}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer (Data) */}
+                <div className="p-8 pb-12 space-y-6">
+                   <div className="space-y-1">
+                     <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
+                     <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">{t.sunsetologyGradient}</h2>
+                   </div>
+
+                   <div className="space-y-1">
+                     {gradientData.stops.map((stop, i) => (
+                       <div key={i} className="flex items-center gap-3 text-[10px] font-mono opacity-80">
+                          <span className="w-16">[{stop.color.r},{stop.color.g},{stop.color.b}]</span>
+                          <span>→</span>
+                          <span>{stop.pct}%</span>
+                          <div className="h-px flex-1 bg-white/20" />
+                       </div>
+                     ))}
+                   </div>
+
+                   <div className="flex justify-between items-end pt-4 border-t border-white/20">
+                      <div className="text-[10px] font-mono opacity-50 max-w-[60%] leading-relaxed">
+                        {quote}
+                      </div>
+                      <div className="text-right">
+                         <p className="text-[10px] font-bold uppercase tracking-widest">{t.generated}</p>
+                         <p className="text-[10px] opacity-50">{t.bySunsetologyApp}</p>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* WALLPAPER VIEW - Single */}
+            {mode === 'wallpaper' && (
+              <div 
+                ref={wallpaperRef}
                 className="relative shadow-2xl overflow-hidden aspect-[9/16] h-full max-h-full bg-slate-900 text-white flex flex-col justify-between"
                 style={{ backgroundImage: gradientData.css }}
               >
-                {/* Header (App Icon) */}
-                <div className="flex justify-end p-8">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-orange-400 to-purple-600 shadow-lg shadow-black/20 flex items-center justify-center border border-white/20">
-                      <div className="w-6 h-6 border-b-2 border-white/80 rounded-full" />
-                    </div>
-                    <span className="text-[10px] font-medium tracking-widest uppercase opacity-80 text-shadow">Sunsetology</span>
-                  </div>
-                </div>
 
                 {/* Footer (Data) */}
                 <div className="p-8 pb-12 space-y-6">
@@ -169,27 +222,35 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
            </div>
 
            {/* Format Toggles */}
-           <div className="flex p-1 bg-white/10 rounded-xl backdrop-blur-sm">
+           <div className="grid grid-cols-3 p-1 bg-white/10 rounded-xl backdrop-blur-sm">
+              <button 
+                onClick={() => setMode('compare')}
+                className={`py-3 text-sm font-medium rounded-lg transition-all ${mode === 'compare' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+              >
+                {t.compare}
+              </button>
               <button 
                 onClick={() => setMode('wallpaper')}
-                className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${mode === 'wallpaper' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                className={`py-3 text-sm font-medium rounded-lg transition-all ${mode === 'wallpaper' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
-                Wallpaper
+                {t.wallpaper}
               </button>
               <button 
                 onClick={() => setMode('card')}
-                className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${mode === 'card' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                className={`py-3 text-sm font-medium rounded-lg transition-all ${mode === 'card' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
-                Card
+                {t.card}
               </button>
            </div>
            
            {/* Info */}
-           <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-3">
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-3">
                  <div className="w-8 h-8 rounded-full bg-gradient-to-b from-white/20 to-transparent flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       {mode === 'wallpaper' ? (
+                       {mode === 'compare' ? (
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                       ) : mode === 'wallpaper' ? (
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                        ) : (
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -197,14 +258,20 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
                     </svg>
                  </div>
                  <div>
-                   <p className="text-sm font-medium text-white">{mode === 'wallpaper' ? '9:16 Portrait' : '4:5 Social'}</p>
-                   <p className="text-xs text-white/40">{mode === 'wallpaper' ? '1080 x 1920px' : '1080 x 1350px'}</p>
+                   <p className="text-sm font-medium text-white">
+                     {mode === 'compare' ? t.comparisonView : mode === 'wallpaper' ? t.portraitView : t.socialView}
+                   </p>
+                   <p className="text-xs text-white/40">
+                     {mode === 'compare' ? t.compareDimensions : mode === 'wallpaper' ? t.wallpaperDimensions : t.cardDimensions}
+                   </p>
                  </div>
               </div>
               <p className="text-xs text-white/30 leading-relaxed border-t border-white/10 pt-3">
-                {mode === 'wallpaper' 
-                  ? "Aesthetic gradient extracted from your photo. Perfect for lock screens."
-                  : "Classic polaroid style with palette strip. Best for Instagram & Xiaohongshu."}
+                {mode === 'compare' 
+                  ? t.compareDescription
+                  : mode === 'wallpaper' 
+                  ? t.wallpaperDescription
+                  : t.cardDescription}
               </p>
            </div>
 
@@ -213,11 +280,11 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
             className="group relative w-full py-4 bg-white text-black font-bold tracking-wide rounded-full overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
            >
              <span className="relative z-10 flex items-center justify-center gap-2">
-               SAVE IMAGE
-               <svg className="w-5 h-5 transition-transform group-hover:translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-               </svg>
-             </span>
+                 {t.saveImage}
+                 <svg className="w-5 h-5 transition-transform group-hover:translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                 </svg>
+               </span>
            </button>
         </div>
 

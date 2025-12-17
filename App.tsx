@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Color, Palette, Language } from './types';
 import { extractSunsetPalette } from './utils/colorService';
 import { LANGUAGES, I18N } from './constants';
@@ -17,6 +17,36 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = I18N[lang];
   const currentLangConfig = LANGUAGES.find(l => l.code === lang);
+  
+  // Quote and Date for preview
+  const quote = useMemo(() => t.quotes[Math.floor(Math.random() * t.quotes.length)], [lang]);
+  const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
+  
+  // Generate Gradient Data (Sorted by Luminance: Bright -> Dark)
+  const gradientData = useMemo(() => {
+    if (!palette) return null;
+    
+    // Sort by luminance descending (Lightest first)
+    const sorted = [...palette.colors].sort((a, b) => {
+      const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
+      const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
+      return lumB - lumA;
+    }).slice(0, 5); // Take top 5 distinct colors for the gradient
+
+    const stops = sorted.map((color, i) => ({
+      color,
+      pct: Math.round((i / (sorted.length - 1)) * 100)
+    }));
+
+    const direction = gradientType === 'radial' ? 'circle at center' : 'to bottom';
+    const css = `${gradientType}-gradient(${direction}, ${stops.map(s => `${s.color.hex} ${s.pct}%`).join(', ')})`;
+
+    return {
+      colors: sorted,
+      stops,
+      css
+    };
+  }, [palette, gradientType]);
 
   const processImage = useCallback(async (file: File) => {
     const url = URL.createObjectURL(file);
@@ -159,33 +189,21 @@ const App: React.FC = () => {
                  <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
                     <h3 className="text-sm uppercase tracking-widest text-white/50 mb-6 flex items-center justify-between">
                       {t.gradient}
-                      <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/70">PREVIEW</span>
+                      <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/70">{t.preview}</span>
                     </h3>
                     
                     {/* Phone Preview Container */}
                     <div className="flex justify-center mb-6">
                       <div 
-                        className="aspect-[9/16] w-1/2 rounded-[2rem] shadow-2xl border-[6px] border-black/40 relative overflow-hidden transition-all duration-500"
-                        style={{ 
-                          background: `${gradientType}-gradient(${gradientType === 'radial' ? 'circle at center,' : 'to bottom,'} ${palette.colors.slice(0, 5).sort((a,b) => {
-                             // Sort for preview to match wallpaper logic (Luminance)
-                             const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-                             const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
-                             return lumB - lumA;
-                          }).map(c => c.hex).join(', ')})` 
-                        }}
+                        className="aspect-[9/16] w-1/2 rounded-[2rem] shadow-2xl border-[6px] border-black/40 relative overflow-hidden transition-all duration-500 flex flex-col justify-between"
+                        style={{ backgroundImage: gradientData?.css || 'none' }}
                       >
-                         {/* Fake Time Overlay for Lockscreen feel */}
-                         <div className="absolute top-8 left-0 right-0 text-center pointer-events-none">
-                            <span className="font-sans font-medium text-white/40 text-4xl drop-shadow-md tracking-tight">18:42</span>
-                         </div>
-                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-16 h-1 bg-white/20 rounded-full" />
                       </div>
                     </div>
 
                     <div className="flex gap-2">
-                       <button onClick={() => setGradientType('linear')} className={`flex-1 py-3 text-xs font-medium rounded-xl border transition-all ${gradientType === 'linear' ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>Linear</button>
-                       <button onClick={() => setGradientType('radial')} className={`flex-1 py-3 text-xs font-medium rounded-xl border transition-all ${gradientType === 'radial' ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>Radial</button>
+                       <button onClick={() => setGradientType('linear')} className={`flex-1 py-3 text-xs font-medium rounded-xl border transition-all ${gradientType === 'linear' ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>{t.linear}</button>
+                       <button onClick={() => setGradientType('radial')} className={`flex-1 py-3 text-xs font-medium rounded-xl border transition-all ${gradientType === 'radial' ? 'bg-white text-black border-white' : 'border-white/20 hover:bg-white/10'}`}>{t.radial}</button>
                     </div>
                  </div>
               </div>
@@ -198,13 +216,13 @@ const App: React.FC = () => {
                   <div className="flex justify-between items-end mb-6">
                      <div>
                        <h2 className="font-serif text-3xl mb-1">{t.palette}</h2>
-                       <p className="text-white/40 text-sm">Detected {palette.colors.length} dominant tones</p>
+                       <p className="text-white/40 text-sm">{t.detectedDominantTones.replace('{count}', palette.colors.length.toString())}</p>
                      </div>
                      <button 
                        onClick={() => setShowExport(true)}
                        className="bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-orange-100 transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-white/10"
                      >
-                       <span>Generate Art</span>
+                       <span>{t.generateArt}</span>
                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                        </svg>
@@ -213,15 +231,15 @@ const App: React.FC = () => {
 
                   {/* Primary Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                     <ColorCard color={palette.primary} size="lg" className="md:col-span-2" />
-                     <ColorCard color={palette.secondary} size="lg" />
-                     <ColorCard color={palette.accent} size="lg" />
+                     <ColorCard color={palette.primary} size="lg" className="md:col-span-2" t={t} />
+                     <ColorCard color={palette.secondary} size="lg" t={t} />
+                     <ColorCard color={palette.accent} size="lg" t={t} />
                   </div>
 
                   {/* Secondary Strip */}
                   <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
                     {palette.colors.map((c, i) => (
-                      <ColorCard key={i} color={c} size="sm" />
+                      <ColorCard key={i} color={c} size="sm" t={t} />
                     ))}
                   </div>
                 </div>
@@ -229,12 +247,12 @@ const App: React.FC = () => {
                 {/* Color Details Table */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5">
-                      <h4 className="text-xs text-white/40 uppercase mb-3">Primary HEX / RGB</h4>
+                      <h4 className="text-xs text-white/40 uppercase mb-3">{t.primaryHexRgb}</h4>
                       <p className="font-mono text-lg">{palette.primary.hex}</p>
                       <p className="font-mono text-sm text-white/60">rgb({palette.primary.r}, {palette.primary.g}, {palette.primary.b})</p>
                    </div>
                    <div className="p-5 rounded-2xl bg-white/5 border border-white/5">
-                      <h4 className="text-xs text-white/40 uppercase mb-3">Primary HSL / CMYK</h4>
+                      <h4 className="text-xs text-white/40 uppercase mb-3">{t.primaryHslCmyk}</h4>
                       <p className="font-mono text-lg">hsl({palette.primary.hsl})</p>
                       <p className="font-mono text-sm text-white/60">cmyk({palette.primary.cmyk})</p>
                    </div>
@@ -246,8 +264,8 @@ const App: React.FC = () => {
         </main>
         
         <footer className="mt-auto py-8 text-center border-t border-white/5">
-          <p className="font-serif text-white/30 text-sm italic">"The sky broke like an egg into full sunset and the water caught fire."</p>
-          <p className="text-white/10 text-xs mt-4 uppercase tracking-widest">© 2024 Sunsetology. Client-side processing only.</p>
+          <p className="font-serif text-white/30 text-sm italic">"{t.footerQuote}"</p>
+          <p className="text-white/10 text-xs mt-4 uppercase tracking-widest">{t.copyright}</p>
         </footer>
 
       </div>
