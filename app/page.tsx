@@ -1,11 +1,12 @@
+'use client';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Color, Palette, Language } from './types';
-import { extractSunsetPalette } from './utils/colorService';
-import { LANGUAGES, I18N } from './constants';
-import { ColorCard } from './components/ColorCard';
-import { ExportView } from './components/ExportView';
+import { Color, Palette, Language } from '../types';
+import { extractSunsetPalette } from '../utils/colorService';
+import { LANGUAGES, I18N } from '../constants';
+import { ColorCard } from '../components/ColorCard';
+import { ExportView } from '../components/ExportView';
 
-const App: React.FC = () => {
+const Home: React.FC = () => {
   const [lang, setLang] = useState<Language>('en');
   const [image, setImage] = useState<string | null>(null);
   const [palette, setPalette] = useState<Palette | null>(null);
@@ -285,4 +286,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Home;

@@ -1,3 +1,4 @@
+'use client';
 import React, { useRef, useState, useMemo } from 'react';
 import { Palette, Translations } from '../types';
 import html2canvas from 'html2canvas';
