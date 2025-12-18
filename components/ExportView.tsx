@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef, useState, useMemo } from 'react';
 import { Palette, Translations } from '../types';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 
 interface ExportViewProps {
@@ -17,7 +17,6 @@ type ExportMode = 'compare' | 'wallpaper' | 'card';
 export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, onClose, langDir }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<ExportMode>('compare');
-  const wallpaperRef = useRef<HTMLDivElement>(null);
   const quote = useRef(t.quotes[Math.floor(Math.random() * t.quotes.length)]).current;
   const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
 
@@ -43,18 +42,17 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
   }, [palette]);
 
   const handleDownload = async () => {
-    const targetRef = mode === 'wallpaper' ? wallpaperRef : cardRef;
+    const targetRef = cardRef;
     if (!targetRef.current) return;
     try {
-      const canvas = await html2canvas(targetRef.current, {
-        scale: 3, // Super high res for wallpapers
-        backgroundColor: null,
-        useCORS: true,
-        logging: false
+      const dataUrl = await toPng(targetRef.current, {
+        pixelRatio: 3, // Super high res for wallpapers
+        backgroundColor: 'transparent',
+        skipAutoScale: false
       });
       const link = document.createElement('a');
       link.download = `sunsetology-${mode}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Failed to generate image", err);
@@ -77,12 +75,11 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
         </button>
 
         {/* Editor / Preview Area */}
-        <div className="flex-1 flex items-center justify-center w-full h-full max-h-[85vh]">
+        <div ref={cardRef} className="flex-1 flex items-center justify-center w-full h-full max-h-[85vh]">
             
             {/* COMPARE VIEW */}
             {mode === 'compare' && (
               <div 
-                ref={cardRef}
                 className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full "
               >
                 {/* Image Comparison Section - Side by Side */}
@@ -141,7 +138,6 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
             {/* WALLPAPER VIEW - Single */}
             {mode === 'wallpaper' && (
               <div 
-                ref={wallpaperRef}
                 className="relative shadow-2xl overflow-hidden aspect-[9/16] h-full max-h-full bg-slate-900 text-white flex flex-col justify-between"
                 style={{ backgroundImage: gradientData.css }}
               >
@@ -180,7 +176,6 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
             {/* POLAROID VIEW */}
             {mode === 'card' && (
               <div 
-                ref={cardRef}
                 className="bg-[#fffdf8] text-slate-900 w-auto h-auto max-h-full aspect-[4/5] p-6 shadow-2xl flex flex-col gap-4"
                 style={{ direction: langDir }}
               >
