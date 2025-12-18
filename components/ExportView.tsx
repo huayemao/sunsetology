@@ -20,6 +20,16 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
   const quote = useRef(t.quotes[Math.floor(Math.random() * t.quotes.length)]).current;
   const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
 
+  // Disable body scroll when modal is open
+  React.useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
   // Generate Gradient Data (Sorted by Luminance: Bright -> Dark)
   const gradientData = useMemo(() => {
     // Sort by luminance descending (Lightest first)
@@ -62,7 +72,7 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050410]/95 backdrop-blur-md p-4 animate-fade-in">
       
-      <div className="relative w-full max-w-6xl h-full flex flex-col md:flex-row gap-8 items-center justify-center p-4">
+      <div className="relative w-full max-w-6xl h-full flex flex-col md:flex-row gap-8 items-center md:justify-center p-4 overflow-y-auto">
         
         {/* Close Button */}
         <button 
