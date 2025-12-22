@@ -1,6 +1,6 @@
 import { Palette } from '../../types';
 
-export type ExportMode = 'compare' | 'wallpaper' | 'card';
+export type ExportMode = 'product' | 'wallpaper' | 'card' | 'compare';
 
 // Generate Gradient Data (Sorted by Luminance: Bright -> Dark)
 export const generateGradientData = (palette: Palette) => {

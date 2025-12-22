@@ -5,6 +5,7 @@ import { toPng } from 'html-to-image';
 import { ExportCompareView } from './export-modes/ExportCompareView';
 import { ExportWallpaperView } from './export-modes/ExportWallpaperView';
 import { ExportCardView } from './export-modes/ExportCardView';
+import { ExportProductView } from './export-modes/ExportProductView';
 import { ExportMode, generateGradientData, getDateStr } from './export-modes/utils';
 
 
@@ -18,7 +19,8 @@ interface ExportViewProps {
 
 export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, onClose, langDir }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<ExportMode>('compare');
+  const [mode, setMode] = useState<ExportMode>('product');
+  const [showOriginal, setShowOriginal] = useState(false);
   const quote = useRef(t.quotes[Math.floor(Math.random() * t.quotes.length)]).current;
   const dateStr = useMemo(() => getDateStr(), []);
 
@@ -45,12 +47,176 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
         skipAutoScale: false
       });
       const link = document.createElement('a');
-      link.download = `sunsetology-${mode}-${Date.now()}.png`;
+      link.download = `sunsetology-${mode}-${showOriginal ? 'with-original' : ''}-${Date.now()}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Failed to generate image", err);
     }
+  };
+
+  // Render Product with Optional Original Comparison
+  const renderProductWithOptionalComparison = () => {
+    if (showOriginal) {
+      return (
+        <div className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full">
+          {/* Image Comparison Section - Side by Side */}
+          <div className="flex-1 flex gap-6 p-8 ">
+            {/* Original Image */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16] max-w-lg">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.original}
+              </div>
+              <img 
+                src={imageUrl} 
+                alt="Original Photo" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* Product */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16] max-w-lg">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.product}
+              </div>
+              <ExportProductView 
+                imageUrl={imageUrl}
+                palette={palette}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+              />
+            </div>
+          </div>
+
+          {/* Footer (Data) */}
+          <div className="p-8 pb-12 space-y-6">
+             <div className="space-y-1">
+               <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
+               <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">Sunsetology Product</h2>
+             </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <ExportProductView 
+        imageUrl={imageUrl}
+        palette={palette}
+        dateStr={dateStr}
+        quote={quote}
+        t={t}
+      />
+    );
+  };
+
+  // Render Wallpaper with Optional Original Comparison
+  const renderWallpaperWithOptionalComparison = () => {
+    if (showOriginal) {
+      return (
+        <div className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full">
+          {/* Image Comparison Section - Side by Side */}
+          <div className="flex-1 flex gap-6 p-8 max-w-lg">
+            {/* Original Image */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.original}
+              </div>
+              <img 
+                src={imageUrl} 
+                alt="Original Photo" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Wallpaper */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.wallpaper}
+              </div>
+              <ExportWallpaperView 
+                gradientData={gradientData}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+              />
+            </div>
+          </div>
+
+          {/* Footer (Data) */}
+          <div className="p-8 pb-12 space-y-6">
+             <div className="space-y-1">
+               <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
+               <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">Sunsetology Wallpaper</h2>
+             </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <ExportWallpaperView 
+        gradientData={gradientData}
+        dateStr={dateStr}
+        quote={quote}
+        t={t}
+      />
+    );
+  };
+
+  // Render Card with Optional Original Comparison
+  const renderCardWithOptionalComparison = () => {
+    if (showOriginal) {
+      return (
+        <div className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full">
+          {/* Image Comparison Section - Side by Side */}
+          <div className="flex-1 flex gap-6 p-8">
+            {/* Original Image */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[4/5] max-w-lg">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.original}
+              </div>
+              <img 
+                src={imageUrl} 
+                alt="Original Photo" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Card */}
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[4/5] max-w-lg">
+              <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
+                {t.card}
+              </div>
+              <ExportCardView 
+                imageUrl={imageUrl}
+                palette={palette}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+                langDir={langDir}
+              />
+            </div>
+          </div>
+
+          {/* Footer (Data) */}
+          <div className="p-8 pb-12 space-y-6">
+             <div className="space-y-1">
+               <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
+               <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">Sunsetology Card</h2>
+             </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <ExportCardView 
+        imageUrl={imageUrl}
+        palette={palette}
+        dateStr={dateStr}
+        quote={quote}
+        t={t}
+        langDir={langDir}
+      />
+    );
   };
 
   return (
@@ -70,35 +236,9 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
 
         {/* Editor / Preview Area */}
         <div ref={cardRef} className="flex-1 flex items-center justify-center w-full h-full max-h-[85vh]">
-            {mode === 'compare' && (
-              <ExportCompareView
-                imageUrl={imageUrl}
-                gradientData={gradientData}
-                dateStr={dateStr}
-                quote={quote}
-                t={t}
-              />
-            )}
-
-            {mode === 'wallpaper' && (
-              <ExportWallpaperView
-                gradientData={gradientData}
-                dateStr={dateStr}
-                quote={quote}
-                t={t}
-              />
-            )}
-
-            {mode === 'card' && (
-              <ExportCardView
-                imageUrl={imageUrl}
-                palette={palette}
-                dateStr={dateStr}
-                quote={quote}
-                t={t}
-                langDir={langDir}
-              />
-            )}
+            {mode === 'product' && renderProductWithOptionalComparison()}
+            {mode === 'wallpaper' && renderWallpaperWithOptionalComparison()}
+            {mode === 'card' && renderCardWithOptionalComparison()}
         </div>
 
         {/* Controls Column */}
@@ -111,10 +251,10 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
            {/* Format Toggles */}
            <div className="grid grid-cols-3 p-1 bg-white/10 rounded-xl backdrop-blur-sm">
               <button 
-                onClick={() => setMode('compare')}
-                className={`py-3 text-sm font-medium rounded-lg transition-all ${mode === 'compare' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                onClick={() => setMode('product')}
+                className={`py-3 text-sm font-medium rounded-lg transition-all ${mode === 'product' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
               >
-                {t.compare}
+                Product
               </button>
               <button 
                 onClick={() => setMode('wallpaper')}
@@ -130,13 +270,29 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
               </button>
            </div>
            
+           {/* Original Comparison Toggle */}
+           <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl backdrop-blur-sm">
+             <div>
+               <p className="text-sm font-medium text-white">{t.includeOriginal}</p>
+               <p className="text-xs text-white/40">Show original image alongside product</p>
+             </div>
+             <button 
+               onClick={() => setShowOriginal(!showOriginal)}
+               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${showOriginal ? 'bg-white text-black shadow-lg' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+             >
+               <svg className={`w-5 h-5 transition-transform ${showOriginal ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+               </svg>
+             </button>
+           </div>
+
            {/* Info */}
             <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-3">
                  <div className="w-8 h-8 rounded-full bg-gradient-to-b from-white/20 to-transparent flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       {mode === 'compare' ? (
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                       {mode === 'product' ? (
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                        ) : mode === 'wallpaper' ? (
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                        ) : (
@@ -146,16 +302,16 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
                  </div>
                  <div>
                    <p className="text-sm font-medium text-white">
-                     {mode === 'compare' ? t.comparisonView : mode === 'wallpaper' ? t.portraitView : t.socialView}
+                     {mode === 'product' ? 'Product' : mode === 'wallpaper' ? t.portraitView : t.socialView}
                    </p>
                    <p className="text-xs text-white/40">
-                     {mode === 'compare' ? t.compareDimensions : mode === 'wallpaper' ? t.wallpaperDimensions : t.cardDimensions}
+                     {mode === 'product' ? 'Artistic circles overlay' : mode === 'wallpaper' ? t.wallpaperDimensions : t.cardDimensions}
                    </p>
                  </div>
               </div>
               <p className="text-xs text-white/30 leading-relaxed border-t border-white/10 pt-3">
-                {mode === 'compare' 
-                  ? t.compareDescription
+                {mode === 'product' 
+                  ? 'Artistic representation with colored circles overlaying the original image.'
                   : mode === 'wallpaper' 
                   ? t.wallpaperDescription
                   : t.cardDescription}

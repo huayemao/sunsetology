@@ -53,7 +53,9 @@ export const I18N: Record<Language, Translations> = {
     primaryHexRgb: 'Primary HEX / RGB',
     primaryHslCmyk: 'Primary HSL / CMYK',
     footerQuote: 'The sky broke like an egg into full sunset and the water caught fire.',
-    copyright: '© 2024 Sunsetology. Client-side processing only.'
+    copyright: '© 2024 Sunsetology. Client-side processing only.',
+    includeOriginal: 'Include Original',
+    product: 'Product'
   },
   zh: {
     title: '暮色工坊',
@@ -100,7 +102,9 @@ export const I18N: Record<Language, Translations> = {
     primaryHexRgb: '主色调 HEX / RGB',
     primaryHslCmyk: '主色调 HSL / CMYK',
     footerQuote: '天空像被打破的蛋，化作了绚丽的日落，水面燃烧起来。',
-    copyright: '© 2024 暮色工坊。仅在客户端处理。'
+    copyright: '© 2024 暮色工坊。仅在客户端处理。',
+    includeOriginal: '包含原图',
+    product: '产物'
   },
   ja: {
     title: '夕暮れのアトリエ',
@@ -147,7 +151,9 @@ export const I18N: Record<Language, Translations> = {
     primaryHexRgb: 'プライマリ HEX / RGB',
     primaryHslCmyk: 'プライマリ HSL / CMYK',
     footerQuote: '空が卵のように割れて、夕日が燃え上がり、水面が燃えた。',
-    copyright: '© 2024 夕暮れのアトリエ。クライアント側でのみ処理されます。'
+    copyright: '© 2024 夕暮れのアトリエ。クライアント側でのみ処理されます。',
+    includeOriginal: '元の画像を含める',
+    product: 'プロダクト'
   },
   ar: {
     title: 'ألوان الغروب',
@@ -194,6 +200,8 @@ export const I18N: Record<Language, Translations> = {
     primaryHexRgb: 'اللون الأساسي HEX / RGB',
     primaryHslCmyk: 'اللون الأساسي HSL / CMYK',
     footerQuote: 'انتشرت السماء كالبصل المكسور لتصبح غروبًا كاملًا واشتعلت الماء.',
-    copyright: '© 2024 ألوان الغروب. معالجة فقط على الجانب العميل.'
+    copyright: '© 2024 ألوان الغروب. معالجة فقط على الجانب العميل.',
+    includeOriginal: 'تضمين الأصلية',
+    product: 'المنتج'
   }
 };

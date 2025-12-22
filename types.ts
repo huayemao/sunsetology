@@ -69,4 +69,6 @@ export interface Translations {
   primaryHslCmyk: string;
   footerQuote: string;
   copyright: string;
+  includeOriginal: string;
+  product: string;
 }
