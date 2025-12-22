@@ -2,6 +2,10 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { Palette, Translations } from '../types';
 import { toPng } from 'html-to-image';
+import { ExportCompareView } from './export-modes/ExportCompareView';
+import { ExportWallpaperView } from './export-modes/ExportWallpaperView';
+import { ExportCardView } from './export-modes/ExportCardView';
+import { ExportMode, generateGradientData, getDateStr } from './export-modes/utils';
 
 
 interface ExportViewProps {
@@ -12,13 +16,11 @@ interface ExportViewProps {
   langDir: 'ltr' | 'rtl';
 }
 
-type ExportMode = 'compare' | 'wallpaper' | 'card';
-
 export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, onClose, langDir }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<ExportMode>('compare');
   const quote = useRef(t.quotes[Math.floor(Math.random() * t.quotes.length)]).current;
-  const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
+  const dateStr = useMemo(() => getDateStr(), []);
 
   // Disable body scroll when modal is open
   React.useEffect(() => {
@@ -31,25 +33,7 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
   }, []);
 
   // Generate Gradient Data (Sorted by Luminance: Bright -> Dark)
-  const gradientData = useMemo(() => {
-    // Sort by luminance descending (Lightest first)
-    const sorted = [...palette.colors].sort((a, b) => {
-      const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
-      const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
-      return lumB - lumA;
-    }).slice(0, 5); // Take top 5 distinct colors for the gradient
-
-    const stops = sorted.map((color, i) => ({
-      color,
-      pct: Math.round((i / (sorted.length - 1)) * 100)
-    }));
-
-    return {
-      colors: sorted,
-      stops,
-      css: `linear-gradient(to bottom, ${stops.map(s => `${s.color.hex} ${s.pct}%`).join(', ')})`
-    };
-  }, [palette]);
+  const gradientData = useMemo(() => generateGradientData(palette), [palette]);
 
   const handleDownload = async () => {
     const targetRef = cardRef;
@@ -86,137 +70,34 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
 
         {/* Editor / Preview Area */}
         <div ref={cardRef} className="flex-1 flex items-center justify-center w-full h-full max-h-[85vh]">
-            
-            {/* COMPARE VIEW */}
             {mode === 'compare' && (
-              <div 
-                className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full "
-              >
-                {/* Image Comparison Section - Side by Side */}
-                <div className="flex-1 flex gap-6 p-8 max-w-lg">
-                  {/* Original Image */}
-                  <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
-                    <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
-                      {t.original}
-                    </div>
-                    <img 
-                      src={imageUrl} 
-                      alt="Original Photo" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Wallpaper (Artistic Output) */}
-                  <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]" style={{ backgroundImage: gradientData.css }}>
-                    <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
-                      {t.artisticWallpaper}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer (Data) */}
-                <div className="p-8 pb-12 space-y-6">
-                   <div className="space-y-1">
-                     <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
-                     <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">{t.sunsetologyGradient}</h2>
-                   </div>
-
-                   <div className="space-y-1">
-                     {gradientData.stops.map((stop, i) => (
-                       <div key={i} className="flex items-center gap-3 text-[10px] font-mono opacity-80">
-                          <span className="w-16">[{stop.color.r},{stop.color.g},{stop.color.b}]</span>
-                          <span>→</span>
-                          <span>{stop.pct}%</span>
-                          <div className="h-px flex-1 bg-white/20" />
-                       </div>
-                     ))}
-                   </div>
-
-                   <div className="flex justify-between items-end pt-4 border-t border-white/20">
-                      <div className="text-[10px] font-mono opacity-50 max-w-[60%] leading-relaxed">
-                        {quote}
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[10px] font-bold uppercase tracking-widest">{t.generated}</p>
-                         <p className="text-[10px] opacity-50">{t.bySunsetologyApp}</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
+              <ExportCompareView
+                imageUrl={imageUrl}
+                gradientData={gradientData}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+              />
             )}
 
-            {/* WALLPAPER VIEW - Single */}
             {mode === 'wallpaper' && (
-              <div 
-                className="relative shadow-2xl overflow-hidden aspect-[9/16] h-full max-h-full bg-slate-900 text-white flex flex-col justify-between"
-                style={{ backgroundImage: gradientData.css }}
-              >
-
-                {/* Footer (Data) */}
-                <div className="p-8 pb-12 space-y-6">
-                   <div className="space-y-1">
-                     <p className="text-sm font-mono opacity-60 tracking-widest">{dateStr}</p>
-                     <h2 className="text-xl font-bold tracking-tight uppercase font-sans text-shadow-sm">Sunsetology 180° Gradient</h2>
-                   </div>
-
-                   <div className="space-y-1">
-                     {gradientData.stops.map((stop, i) => (
-                       <div key={i} className="flex items-center gap-3 text-[10px] font-mono opacity-80">
-                          <span className="w-16">[{stop.color.r},{stop.color.g},{stop.color.b}]</span>
-                          <span>→</span>
-                          <span>{stop.pct}%</span>
-                          <div className="h-px flex-1 bg-white/20" />
-                       </div>
-                     ))}
-                   </div>
-
-                   <div className="flex justify-between items-end pt-4 border-t border-white/20">
-                      <div className="text-[10px] font-mono opacity-50 max-w-[60%] leading-relaxed">
-                        {quote}
-                      </div>
-                      <div className="text-right">
-                         <p className="text-[10px] font-bold uppercase tracking-widest">Generated</p>
-                         <p className="text-[10px] opacity-50">By Sunsetology App</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
+              <ExportWallpaperView
+                gradientData={gradientData}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+              />
             )}
 
-            {/* POLAROID VIEW */}
             {mode === 'card' && (
-              <div 
-                className="bg-[#fffdf8] text-slate-900 w-auto h-auto max-h-full aspect-[4/5] p-6 shadow-2xl flex flex-col gap-4"
-                style={{ direction: langDir }}
-              >
-                <div className="relative w-full flex-1 bg-slate-100 overflow-hidden">
-                   <img src={imageUrl} alt="Sunset" className="w-full h-full object-cover" />
-                </div>
-
-                <div className="flex w-full h-12 gap-1">
-                   {palette.colors.slice(0, 5).map((c, i) => (
-                      <div key={i} className="flex-1 h-full" style={{ backgroundColor: c.hex }} />
-                   ))}
-                </div>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <div className="flex justify-between items-baseline border-b border-slate-200 pb-2">
-                    <h3 className="font-serif text-2xl font-bold tracking-tight">{t.shareTitle}</h3>
-                    <span className="font-mono text-xs text-slate-400">{dateStr}</span>
-                  </div>
-                  <p className={`font-serif italic text-sm text-slate-600 leading-relaxed mt-1 ${langDir === 'rtl' ? 'text-right' : 'text-left'}`}>
-                    "{quote}"
-                  </p>
-                  <div className="flex justify-between items-center mt-2">
-                     <p className="font-sans text-[10px] text-slate-400 uppercase tracking-[0.2em]">
-                        #{palette.primary.hex} • #{palette.secondary.hex}
-                     </p>
-                     <p className="font-sans text-[10px] text-slate-900 font-bold uppercase tracking-widest">
-                       Sunsetology
-                     </p>
-                  </div>
-                </div>
-              </div>
+              <ExportCardView
+                imageUrl={imageUrl}
+                palette={palette}
+                dateStr={dateStr}
+                quote={quote}
+                t={t}
+                langDir={langDir}
+              />
             )}
         </div>
 
