@@ -115,9 +115,9 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
       return (
         <div className="relative shadow-2xl overflow-hidden bg-slate-900 text-white flex flex-col h-full max-h-full">
           {/* Image Comparison Section - Side by Side */}
-          <div className="flex-1 flex gap-6 p-8 max-w-lg">
+          <div className="flex-1 flex gap-6 p-8 ">
             {/* Original Image */}
-            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16] max-w-lg">
               <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
                 {t.original}
               </div>
@@ -129,7 +129,7 @@ export const ExportView: React.FC<ExportViewProps> = ({ palette, imageUrl, t, on
             </div>
 
             {/* Wallpaper */}
-            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16]">
+            <div className="flex-1 relative overflow-hidden rounded-lg shadow-lg aspect-[9/16] max-w-lg">
               <div className="absolute top-3 left-3 bg-black/70 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full backdrop-blur-sm">
                 {t.wallpaper}
               </div>
