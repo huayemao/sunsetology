@@ -7,22 +7,33 @@ import { ExportView } from './ExportView';
 
 interface ColorExtractorBaseProps {
   extractPalette: (image: HTMLImageElement) => Promise<Palette>;
-  themeColors: {
-    primary: string;
-    secondary: string;
-    tertiary: string;
-    hover: string;
-  };
-  buttonHoverColor: string;
+  theme: 'sunset' | 'general';
   modeText: string;
   modeLink: string;
   altText: string;
 }
 
+// Predefine themes
+const themes = {
+  sunset: {
+    primary: 'orange-400',
+    secondary: 'red-500',
+    tertiary: 'purple-600',
+    hover: 'orange-400',
+    buttonHover: 'orange-100'
+  },
+  general: {
+    primary: 'blue-400',
+    secondary: 'green-500',
+    tertiary: 'purple-600',
+    hover: 'blue-400',
+    buttonHover: 'blue-100'
+  }
+};
+
 const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
   extractPalette,
-  themeColors,
-  buttonHoverColor,
+  theme,
   modeText,
   modeLink,
   altText
@@ -34,10 +45,12 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
   const [showExport, setShowExport] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [gradientType, setGradientType] = useState<'linear' | 'radial'>('linear');
+  const [showLangMenu, setShowLangMenu] = useState(false); // Add state for language menu toggle
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = I18N[lang];
   const currentLangConfig = LANGUAGES.find(l => l.code === lang);
+  // Remove unused themeConfig variable
   
   // Quote and Date for preview
   const quote = useMemo(() => t.quotes[Math.floor(Math.random() * t.quotes.length)], [lang]);
@@ -126,11 +139,12 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
         {/* Header */}
         <header className="flex justify-between items-center mb-12 md:mb-20">
           <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded-full bg-gradient-to-tr from-${themeColors.primary} via-${themeColors.secondary} to-${themeColors.tertiary} animate-pulse-slow shadow-lg shadow-${themeColors.primary}/20`}></div>
+            <div className={`w-8 h-8 rounded-full bg-gradient-to-tr ${theme=='sunset' ? `from-orange-400 via-red-500 to-purple-600` : ` from-blue-400 via-green-500 to-purple-600`} animate-pulse-slow shadow-lg ${theme=='sunset' ? `shadow-orange-400/20` : `shadow-blue-400/20`}`}></div>
             <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-tight">{t.title}</h1>
           </div>
           
-          <div className="flex gap-2">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex gap-2">
             <a 
               href={modeLink} 
               className="text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10 text-white/80 hover:text-white transition-all"
@@ -147,6 +161,43 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
               </button>
             ))}
           </div>
+          
+          {/* Mobile Navigation */}
+          <div className="md:hidden flex gap-2">
+            <a 
+              href={modeLink} 
+              className="text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10 text-white/80 hover:text-white transition-all"
+            >
+              {modeText}
+            </a>
+            <div className="relative">
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className={`text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10 text-white/80 hover:text-white transition-all flex items-center gap-1`}
+              >
+                {LANGUAGES.find(l => l.code === lang)?.label}
+                <svg className={`w-3 h-3 transition-transform ${showLangMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showLangMenu && (
+                <div className="absolute right-0 mt-2 w-40 bg-white/10 backdrop-blur-md rounded-lg border border-white/20 shadow-xl z-20">
+                  {LANGUAGES.map(l => (
+                    <button
+                      key={l.code}
+                      onClick={() => {
+                        setLang(l.code);
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left text-xs px-4 py-2 transition-all ${lang === l.code ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/15'}`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </header>
 
         {/* Main Content Area */}
@@ -155,7 +206,7 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
           {!image && (
              <div 
                className={`w-full max-w-xl aspect-[16/10] border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden group
-               ${dragOver ? `border-${themeColors.hover} bg-${themeColors.hover}/5 scale-[1.02]` : 'border-white/10 hover:border-white/20 bg-white/5'}`}
+               ${dragOver ? `border-${theme=='sunset' ? 'orange-400' : 'blue-400'} bg-${theme=='sunset' ? 'orange-400' : 'blue-400'}/5 scale-[1.02]` : 'border-white/10 hover:border-white/20 bg-white/5'}`}
                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                onDragLeave={() => setDragOver(false)}
                onDrop={handleDrop}
@@ -169,8 +220,8 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
                />
                 
                <div className="text-center p-8 pointer-events-none z-10 transform transition-transform group-hover:scale-105">
-                 <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-${themeColors.primary} to-transparent opacity-80 flex items-center justify-center`}>
-                    <svg className={`w-8 h-8 text-${themeColors.primary}-100`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-${theme=='sunset' ? 'orange-400' : 'blue-400'} to-transparent opacity-80 flex items-center justify-center`}>
+                    <svg className={`w-8 h-8 text-${theme=='sunset' ? 'orange-100' : 'blue-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                  </div>
@@ -179,14 +230,14 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
                </div>
                 
                {/* Decorative glow on hover */}
-               <div className={`absolute inset-0 bg-gradient-to-br from-${themeColors.primary}/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+               <div className={`absolute inset-0 bg-gradient-to-br from-${theme=='sunset' ? 'orange-400' : 'blue-400'}/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
              </div>
           )}
 
           {image && isAnalyzing && (
             <div className="flex flex-col items-center animate-fade-in">
               <div className="relative w-24 h-24 mb-8">
-                <div className={`absolute inset-0 rounded-full border-t-2 border-r-2 border-${themeColors.hover} animate-spin`}></div>
+                <div className={`absolute inset-0 rounded-full border-t-2 border-r-2 border-${theme=='sunset' ? 'orange-400' : 'blue-400'} animate-spin`}></div>
                 <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-purple-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -247,7 +298,7 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
                      </div>
                      <button 
                        onClick={() => setShowExport(true)}
-                       className={`bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-${buttonHoverColor} transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-white/10`}
+                       className={`bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-${theme=='sunset' ? 'orange-100' : 'blue-100'} transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-white/10`}
                      >
                        <span>{t.generateArt}</span>
                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

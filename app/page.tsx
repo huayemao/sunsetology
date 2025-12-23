@@ -7,13 +7,7 @@ const Home: React.FC = () => {
   return (
     <ColorExtractorBase
       extractPalette={extractSunsetPalette}
-      themeColors={{
-        primary: 'orange-400',
-        secondary: 'red-500',
-        tertiary: 'purple-600',
-        hover: 'orange-400'
-      }}
-      buttonHoverColor="orange-100"
+      theme="sunset"
       modeText="General Extractor"
       modeLink="/general"
       altText="Original Sunset"
