@@ -110,9 +110,6 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
       } finally {
         setIsAnalyzing(false);
         // Clean up blob URL if it was created from a File object
-        if (isBlob) {
-          URL.revokeObjectURL(url);
-        }
       }
     };
   }, [extractPalette]);
