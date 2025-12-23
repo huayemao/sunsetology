@@ -22,6 +22,8 @@ export const I18N: Record<Language, Translations> = {
     download: 'Save Art',
     reset: 'New Capture',
     shareTitle: 'Color Palette',
+    exampleImages: 'Example Images',
+    useThisImage: 'Use this image',
     quotes: [
       "Sunsets are proof that no matter what happens, every day can end beautifully.",
       "The sky broke like an egg into full sunset and the water caught fire.",
@@ -73,6 +75,8 @@ export const I18N: Record<Language, Translations> = {
     download: '保存创作',
     reset: '重新制作',
     shareTitle: '色彩色卡',
+    exampleImages: '示例图片',
+    useThisImage: '使用此图片',
     quotes: [
       "日落跌进昭昭星野，人间忽晚，山河已秋。",
       "落日余晖，待你而归。",
@@ -124,6 +128,8 @@ export const I18N: Record<Language, Translations> = {
     download: '保存する',
     reset: '新規作成',
     shareTitle: '色彩パレット',
+    exampleImages: 'サンプル画像',
+    useThisImage: 'この画像を使用',
     quotes: [
       "夕焼けは、明日への希望の色。",
       "空が燃えるような、美しい別れ。",
@@ -175,6 +181,8 @@ export const I18N: Record<Language, Translations> = {
     download: 'حفظ العمل',
     reset: 'صورة جديدة',
     shareTitle: 'لوحة الألوان',
+    exampleImages: 'صور عينة',
+    useThisImage: 'استخدم هذه الصورة',
     quotes: [
       "الغروب هو الدليل على أن النهايات يمكن أن تكون جميلة أيضًا.",
       "كل غروب يأتي بوعد لشروق جديد.",

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Color, Palette, Language } from '../types';
 import { LANGUAGES, I18N } from '../constants';
 import { ColorCard } from './ColorCard';
@@ -11,6 +11,7 @@ interface ColorExtractorBaseProps {
   modeText: string;
   modeLink: string;
   altText: string;
+  exampleImages?: string[]; // Add example images parameter
 }
 
 // Predefine themes
@@ -36,7 +37,8 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
   theme,
   modeText,
   modeLink,
-  altText
+  altText,
+  exampleImages = [] // Set default empty array for example images
 }) => {
   const [lang, setLang] = useState<Language>('en');
   const [image, setImage] = useState<string | null>(null);
@@ -51,10 +53,6 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
   const t = I18N[lang];
   const currentLangConfig = LANGUAGES.find(l => l.code === lang);
   // Remove unused themeConfig variable
-  
-  // Quote and Date for preview
-  const quote = useMemo(() => t.quotes[Math.floor(Math.random() * t.quotes.length)], [lang]);
-  const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
   
   // Generate Gradient Data (Sorted by Luminance: Bright -> Dark)
   const gradientData = useMemo(() => {
@@ -82,8 +80,17 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
     };
   }, [palette, gradientType]);
 
-  const processImage = useCallback(async (file: File) => {
-    const url = URL.createObjectURL(file);
+  const processImage = useCallback(async (input: File | string) => {
+    let url: string;
+    let isBlob = false;
+
+    if (input instanceof File) {
+      url = URL.createObjectURL(input);
+      isBlob = true;
+    } else {
+      url = input;
+    }
+
     setImage(url);
     setIsAnalyzing(true);
 
@@ -101,9 +108,47 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
         console.error("Analysis failed", e);
       } finally {
         setIsAnalyzing(false);
+        // Clean up blob URL if it was created from a File object
+        if (isBlob) {
+          URL.revokeObjectURL(url);
+        }
       }
     };
   }, [extractPalette]);
+
+  const handleExampleImageClick = (imageUrl: string) => {
+    processImage(imageUrl);
+  };
+
+  // Handle paste event for images
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            processImage(file);
+            break;
+          }
+        }
+      }
+    };
+
+    // Add paste event listener to document
+    document.addEventListener('paste', handlePaste);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [processImage]);
+
+  // Quote and Date for preview
+  const quote = useMemo(() => t.quotes[Math.floor(Math.random() * t.quotes.length)], [lang]);
+  const dateStr = useMemo(() => new Date().toISOString().slice(0,10).replace(/-/g, ''), []);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -204,34 +249,68 @@ const ColorExtractorBase: React.FC<ColorExtractorBaseProps> = ({
         <main className="min-h-[60vh] flex flex-col items-center justify-center">
           
           {!image && (
-             <div 
-               className={`w-full max-w-xl aspect-[16/10] border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden group
-               ${dragOver ? `border-${theme=='sunset' ? 'orange-400' : 'blue-400'} bg-${theme=='sunset' ? 'orange-400' : 'blue-400'}/5 scale-[1.02]` : 'border-white/10 hover:border-white/20 bg-white/5'}`}
-               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-               onDragLeave={() => setDragOver(false)}
-               onDrop={handleDrop}
-             >
-               <input 
-                 type="file" 
-                 accept="image/*" 
-                 className="absolute inset-0 opacity-0 cursor-pointer z-20"
-                 ref={fileInputRef}
-                 onChange={handleFileChange}
-               />
-                
-               <div className="text-center p-8 pointer-events-none z-10 transform transition-transform group-hover:scale-105">
-                 <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-${theme=='sunset' ? 'orange-400' : 'blue-400'} to-transparent opacity-80 flex items-center justify-center`}>
-                    <svg className={`w-8 h-8 text-${theme=='sunset' ? 'orange-100' : 'blue-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                 </div>
-                 <h2 className="text-2xl font-serif mb-2">{t.uploadText}</h2>
-                 <p className="text-white/40 text-sm font-sans">{t.uploadSubtext}</p>
-               </div>
-                
-               {/* Decorative glow on hover */}
-               <div className={`absolute inset-0 bg-gradient-to-br from-${theme=='sunset' ? 'orange-400' : 'blue-400'}/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
-             </div>
+             <div className="w-full max-w-xl">
+              <div 
+                className={`w-full max-w-xl aspect-[16/10] border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden group
+                ${dragOver ? `border-${theme=='sunset' ? 'orange-400' : 'blue-400'} bg-${theme=='sunset' ? 'orange-400' : 'blue-400'}/5 scale-[1.02]` : 'border-white/10 hover:border-white/20 bg-white/5'}`}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+              >
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+                  
+                <div className="text-center p-8 pointer-events-none z-10 transform transition-transform group-hover:scale-105">
+                  <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-${theme=='sunset' ? 'orange-400' : 'blue-400'} to-transparent opacity-80 flex items-center justify-center`}>
+                     <svg className={`w-8 h-8 text-${theme=='sunset' ? 'orange-100' : 'blue-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                     </svg>
+                  </div>
+                  <h2 className="text-2xl font-serif mb-2">{t.uploadText}</h2>
+                  <p className="text-white/40 text-sm font-sans">{t.uploadSubtext}</p>
+                </div>
+                  
+                {/* Decorative glow on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br from-${theme=='sunset' ? 'orange-400' : 'blue-400'}/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+              </div>
+
+              {/* 示例图片选择区域 */}
+              {exampleImages && exampleImages.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {t.exampleImages}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    {exampleImages.map((imageUrl, index) => (
+                      <div
+                        key={index}
+                        className="relative cursor-pointer group overflow-hidden rounded-lg shadow-md transition-all hover:shadow-xl hover:scale-105"
+                        onClick={() => handleExampleImageClick(imageUrl)}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt={`Example ${index + 1}`}
+                          className="w-full h-32 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-white font-medium">
+                            {t.useThisImage}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {image && isAnalyzing && (

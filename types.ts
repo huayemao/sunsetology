@@ -73,4 +73,6 @@ export interface Translations {
   copyright: string;
   includeOriginal: string;
   product: string;
+  exampleImages: string;
+  useThisImage: string;
 }
