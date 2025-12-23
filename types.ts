@@ -30,6 +30,8 @@ export type GradientType = 'linear' | 'radial' | 'conic';
 
 export interface Translations {
   title: string;
+  general: string;
+  sunsetMode: string;
   subtitle: string;
   uploadText: string;
   uploadSubtext: string;

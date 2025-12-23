@@ -48,12 +48,16 @@ const colorDistance = (c1: {r:number, g:number, b:number}, c2: {r:number, g:numb
   return Math.sqrt(Math.pow(c1.r - c2.r, 2) + Math.pow(c1.g - c2.g, 2) + Math.pow(c1.b - c2.b, 2));
 };
 
+// 权重计算函数类型定义
+type WeightFunction = (r: number, g: number, b: number, hsl: { h: number; s: number; l: number }) => number;
+
 /**
- * Extracts colors specifically weighted for sunset aesthetics.
- * Prioritizes: Warms tones (Hue 300-60), Deep Blues (Hue 200-260).
- * Penalizes: Low saturation greys, pure blacks/whites (unless high contrast).
+ * 通用的颜色提取函数，可以通过权重函数自定义颜色优先级
+ * @param imageElement HTML图像元素
+ * @param weightFunction 自定义权重计算函数，决定哪些颜色应该被优先选择
+ * @returns 提取的调色板
  */
-export const extractSunsetPalette = (imageElement: HTMLImageElement): Promise<Palette> => {
+export const extractPalette = (imageElement: HTMLImageElement, weightFunction?: WeightFunction): Promise<Palette> => {
   return new Promise((resolve, reject) => {
     try {
       const canvas = document.createElement('canvas');
@@ -82,19 +86,11 @@ export const extractSunsetPalette = (imageElement: HTMLImageElement): Promise<Pa
 
         const hsl = rgbToHsl(r, g, b);
 
-        // Sunset Weighting Logic
-        let weight = 1;
+        // 计算权重
+        let weight = weightFunction ? weightFunction(r, g, b, hsl) : 1;
         
-        // Boost Reds, Oranges, Pinks, Purples (Hue 300-360 & 0-60)
-        if (hsl.h > 300 || hsl.h < 60) weight += 2.0;
-        // Boost Twilight Blues (Hue 200-260) with moderate darkness
-        else if (hsl.h > 200 && hsl.h < 260 && hsl.l < 60) weight += 1.5;
-        
-        // Penalize de-saturated colors (greys) unless they are very dark (silhouettes)
-        if (hsl.s < 20 && hsl.l > 15 && hsl.l < 85) weight -= 0.5;
-        
-        // Penalize pure white blowouts
-        if (hsl.l > 95) weight -= 0.8;
+        // 确保权重不为负数
+        weight = Math.max(0.1, weight);
 
         const key = `${Math.round(r / quantizationFactor) * quantizationFactor},${Math.round(g / quantizationFactor) * quantizationFactor},${Math.round(b / quantizationFactor) * quantizationFactor}`;
         
@@ -137,7 +133,7 @@ export const extractSunsetPalette = (imageElement: HTMLImageElement): Promise<Pa
       resolve({
         primary: sortedByLum[Math.floor(sortedByLum.length / 2)] || finalColors[0], // Mid-tone usually works best as primary
         secondary: sortedByLum[0] || finalColors[1], // Brightest
-        accent: sortedByLum[sortedByLum.length - 1] || finalColors[2], // Darkest (Silhouette)
+        accent: sortedByLum[sortedByLum.length - 1] || finalColors[2], // Darkest
         background: sortedByLum[sortedByLum.length - 2] || finalColors[0],
         colors: finalColors
       });
@@ -146,4 +142,41 @@ export const extractSunsetPalette = (imageElement: HTMLImageElement): Promise<Pa
       reject(e);
     }
   });
+};
+
+/**
+ * 日落特定的权重函数，为日落照片优化颜色提取
+ */
+const sunsetWeightFunction: WeightFunction = (r: number, g: number, b: number, hsl: { h: number; s: number; l: number }) => {
+  let weight = 1;
+  
+  // Boost Reds, Oranges, Pinks, Purples (Hue 300-360 & 0-60)
+  if (hsl.h > 300 || hsl.h < 60) weight += 2.0;
+  // Boost Twilight Blues (Hue 200-260) with moderate darkness
+  else if (hsl.h > 200 && hsl.h < 260 && hsl.l < 60) weight += 1.5;
+  
+  // Penalize de-saturated colors (greys) unless they are very dark (silhouettes)
+  if (hsl.s < 20 && hsl.l > 15 && hsl.l < 85) weight -= 0.5;
+  
+  // Penalize pure white blowouts
+  if (hsl.l > 95) weight -= 0.8;
+  
+  return weight;
+};
+
+/**
+ * Extracts colors specifically weighted for sunset aesthetics.
+ * Prioritizes: Warms tones (Hue 300-60), Deep Blues (Hue 200-260).
+ * Penalizes: Low saturation greys, pure blacks/whites (unless high contrast).
+ */
+export const extractSunsetPalette = (imageElement: HTMLImageElement): Promise<Palette> => {
+  return extractPalette(imageElement, sunsetWeightFunction);
+};
+
+/**
+ * Extracts colors from any image without specific weighting for sunset aesthetics.
+ * Provides a balanced palette suitable for all types of images.
+ */
+export const extractGeneralPalette = (imageElement: HTMLImageElement): Promise<Palette> => {
+  return extractPalette(imageElement); // No weight function means balanced extraction
 };

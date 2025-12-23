@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Color, Palette, Language } from '../types';
-import { extractSunsetPalette } from '../utils/colorService';
-import { LANGUAGES, I18N } from '../constants';
-import { ColorCard } from '../components/ColorCard';
-import { ExportView } from '../components/ExportView';
+import { Color, Palette, Language } from '../../types';
+import { extractGeneralPalette } from '../../utils/colorService';
+import { LANGUAGES, I18N } from '../../constants';
+import { ColorCard } from '../../components/ColorCard';
+import { ExportView } from '../../components/ExportView';
 
-const Home: React.FC = () => {
+const GeneralColorExtractor: React.FC = () => {
   const [lang, setLang] = useState<Language>('en');
   const [image, setImage] = useState<string | null>(null);
   const [palette, setPalette] = useState<Palette | null>(null);
@@ -62,7 +62,7 @@ const Home: React.FC = () => {
       try {
         // Artificial delay for dramatic effect
         await new Promise(r => setTimeout(r, 1200)); 
-        const extractedPalette = await extractSunsetPalette(img);
+        const extractedPalette = await extractGeneralPalette(img);
         setPalette(extractedPalette);
       } catch (e) {
         console.error("Analysis failed", e);
@@ -97,7 +97,7 @@ const Home: React.FC = () => {
       
       {/* Background Ambient Light */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-purple-900/30 rounded-full blur-[120px]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-blue-900/30 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-900/20 rounded-full blur-[100px]" />
       </div>
 
@@ -106,16 +106,16 @@ const Home: React.FC = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-12 md:mb-20">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-400 via-red-500 to-purple-600 animate-pulse-slow shadow-lg shadow-orange-500/20"></div>
-            <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-tight">{t.title}</h1>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 via-green-500 to-purple-600 animate-pulse-slow shadow-lg shadow-blue-500/20"></div>
+            <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-tight">{t.title || 'Image Color Extractor'}</h1>
           </div>
           
           <div className="flex gap-2">
             <a 
-              href="/general" 
+              href="/" 
               className="text-xs px-3 py-1 rounded-full border border-white/20 hover:bg-white/10 text-white/80 hover:text-white transition-all"
             >
-              {t.general || 'General Extractor'}
+              {t.sunsetMode || 'Sunset Mode'}
             </a>
             {LANGUAGES.map(l => (
               <button
@@ -135,7 +135,7 @@ const Home: React.FC = () => {
           {!image && (
              <div 
                className={`w-full max-w-xl aspect-[16/10] border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all duration-300 relative overflow-hidden group
-               ${dragOver ? 'border-orange-400 bg-orange-500/5 scale-[1.02]' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
+               ${dragOver ? 'border-blue-400 bg-blue-500/5 scale-[1.02]' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                onDragLeave={() => setDragOver(false)}
                onDrop={handleDrop}
@@ -149,8 +149,8 @@ const Home: React.FC = () => {
                />
                
                <div className="text-center p-8 pointer-events-none z-10 transform transition-transform group-hover:scale-105">
-                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-orange-300 to-transparent opacity-80 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-orange-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-t from-blue-300 to-transparent opacity-80 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-blue-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                  </div>
@@ -159,14 +159,14 @@ const Home: React.FC = () => {
                </div>
                
                {/* Decorative glow on hover */}
-               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
              </div>
           )}
 
           {image && isAnalyzing && (
             <div className="flex flex-col items-center animate-fade-in">
               <div className="relative w-24 h-24 mb-8">
-                <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-orange-400 animate-spin"></div>
+                <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-blue-400 animate-spin"></div>
                 <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-purple-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -182,7 +182,7 @@ const Home: React.FC = () => {
               {/* Left Column: Image & Controls */}
               <div className="lg:col-span-5 flex flex-col gap-6">
                  <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
-                   <img src={image} alt="Original Sunset" className="w-full h-auto object-cover" />
+                   <img src={image} alt="Original Image" className="w-full h-auto object-cover" />
                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-6">
                      <button 
                        onClick={reset}
@@ -227,7 +227,7 @@ const Home: React.FC = () => {
                      </div>
                      <button 
                        onClick={() => setShowExport(true)}
-                       className="bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-orange-100 transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-white/10"
+                       className="bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-blue-100 transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-white/10"
                      >
                        <span>{t.generateArt}</span>
                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,4 +292,4 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+export default GeneralColorExtractor;

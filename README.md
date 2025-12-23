@@ -2,9 +2,17 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Sunsetology Studio
 
-This contains everything you need to run your app locally.
+An AI-powered color extraction app that transforms sunset moments and general photos into beautiful color palettes and artistic designs.
+
+## Features
+
+- **Sunset Mode**: Specialized color extraction for sunset photos, enhancing warm tones and creating aesthetically pleasing palettes
+- **General Extractor**: Universal color extraction for all types of photos, providing balanced and accurate color palettes
+- **Multi-language Support**: Available in English, Simplified Chinese, Japanese, and Arabic
+- **Artistic Creations**: Generate gradients, wallpapers, and share cards from extracted colors
+- **Client-side Processing**: All image processing happens locally for maximum privacy
 
 View your app in AI Studio: https://ai.studio/apps/temp/2
 
@@ -106,3 +114,17 @@ interface ComponentProps {
 - 简体中文 (zh)
 - 日语 (ja)
 - 阿拉伯语 (ar) (RTL支持)
+
+## Color Extraction Modes
+
+### Sunset Mode
+- Default mode optimized for sunset photos
+- Enhances warm tones (reds, oranges, pinks)
+- Creates aesthetically pleasing palettes inspired by sunset aesthetics
+- Available at: `/`
+
+### General Extractor
+- Universal color extraction for all photo types
+- Provides balanced and accurate color palettes
+- No special weighting for specific color tones
+- Available at: `/general`
