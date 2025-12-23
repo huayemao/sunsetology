@@ -53,13 +53,17 @@ export const I18N: Record<Language, Translations> = {
     copied: 'COPIED',
     preview: 'PREVIEW',
     generateArt: 'Generate Art',
+    generateMoreArt: 'Generate More Art',
     detectedDominantTones: 'Detected {count} dominant tones',
     primaryHexRgb: 'Primary HEX / RGB',
     primaryHslCmyk: 'Primary HSL / CMYK',
     footerQuote: 'The sky broke like an egg into full sunset and the water caught fire.',
     copyright: '© 2024 Sunsetology. Client-side processing only.',
     includeOriginal: 'Include Original',
-    product: 'Product'
+    product: 'Product',
+    atmosphere: 'Atmosphere',
+    colorStory: 'Color Story',
+    chromaticDna: 'Chromatic DNA'
   },
   zh: {
     title: '暮色工坊',
@@ -106,13 +110,17 @@ export const I18N: Record<Language, Translations> = {
     copied: '已复制',
     preview: '预览',
     generateArt: '生成艺术',
+    generateMoreArt: '生成更多艺术',
     detectedDominantTones: '检测到 {count} 种主色调',
     primaryHexRgb: '主色调 HEX / RGB',
     primaryHslCmyk: '主色调 HSL / CMYK',
     footerQuote: '天空像被打破的蛋，化作了绚丽的日落，水面燃烧起来。',
     copyright: '© 2024 暮色工坊。仅在客户端处理。',
     includeOriginal: '包含原图',
-    product: '产物'
+    product: '产物',
+    atmosphere: '氛围',
+    colorStory: '色彩故事',
+    chromaticDna: '色彩基因'
   },
   ja: {
     title: '夕暮れのアトリエ',
@@ -159,13 +167,17 @@ export const I18N: Record<Language, Translations> = {
     copied: 'コピー済み',
     preview: 'プレビュー',
     generateArt: 'アートを生成',
+    generateMoreArt: 'より多くのアートを生成',
     detectedDominantTones: '{count} 色の主な色調を検出',
     primaryHexRgb: 'プライマリ HEX / RGB',
     primaryHslCmyk: 'プライマリ HSL / CMYK',
     footerQuote: '空が卵のように割れて、夕日が燃え上がり、水面が燃えた。',
     copyright: '© 2024 夕暮れのアトリエ。クライアント側でのみ処理されます。',
     includeOriginal: '元の画像を含める',
-    product: 'プロダクト'
+    product: 'プロダクト',
+    atmosphere: 'アトモスフィア',
+    colorStory: 'カラーストーリー',
+    chromaticDna: 'クロマティックDNA'
   },
   ar: {
     title: 'ألوان الغروب',
@@ -212,12 +224,16 @@ export const I18N: Record<Language, Translations> = {
     copied: 'تم النسخ',
     preview: 'معاينة',
     generateArt: 'توليد الفن',
+    generateMoreArt: 'توليد المزيد من الفن',
     detectedDominantTones: 'تم اكتشاف {count} نغمة سائدة',
     primaryHexRgb: 'اللون الأساسي HEX / RGB',
     primaryHslCmyk: 'اللون الأساسي HSL / CMYK',
     footerQuote: 'انتشرت السماء كالبصل المكسور لتصبح غروبًا كاملًا واشتعلت الماء.',
     copyright: '© 2024 ألوان الغروب. معالجة فقط على الجانب العميل.',
     includeOriginal: 'تضمين الأصلية',
-    product: 'المنتج'
+    product: 'المنتج',
+    atmosphere: 'الجو',
+    colorStory: 'قصة الألوان',
+    chromaticDna: 'الدنا اللوني'
   }
 };
